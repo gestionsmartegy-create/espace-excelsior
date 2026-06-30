@@ -788,9 +788,144 @@ footer{background:var(--ink);color:rgba(244,240,230,.55);padding:var(--sp-5) var
 .rv.on{opacity:1;transform:translateY(0)}
 
 /* ==========================================================================
-   RESPONSIVE — global
+   RESPONSIVE — tablette (≤ 900 px)
    ========================================================================== */
 @media(max-width:900px){
-  :root{--gut:24px}
+  :root{--gut:clamp(1rem,.5rem+2.5vw,2rem)}
+
+  /* NAV */
+  .nav{padding:16px var(--gut)}
   .nav-links{display:none}
+  .nav-cta{padding:9px 16px;font-size:.65rem}
+  .nav-logo img{height:26px}
+  .nav.scrolled .nav-logo img{height:22px}
+
+  /* HERO */
+  .hero{align-items:flex-end;min-height:100svh}
+  .hero-content{margin-bottom:10vh;padding-bottom:0}
+  .hero h1{font-size:clamp(2rem,5vw,3rem)}
+  .hero-lede{max-width:none;font-size:var(--fs-sm)}
+  .hero-links{flex-direction:column;align-items:flex-start;gap:10px}
+  .btn-stroke{width:100%;max-width:320px;justify-content:center;padding:14px 20px}
+
+  /* ABOUT */
+  .about-media .am-a{margin-top:0}
+
+  /* SERVICES */
+  .svc-row{grid-template-columns:44px 1fr;row-gap:4px}
+  .svc-desc{grid-column:2/3;margin-top:-2px}
+  .svc-transition{font-size:var(--fs-sm)}
+  .svc-section .text-link{margin-top:var(--sp-2)}
+
+  /* GALERIE — tabs scrollables horizontalement */
+  .gal-tabs{
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;gap:0;
+    border-bottom:1px solid var(--line);
+    margin-bottom:var(--sp-3);
+    padding-bottom:0;
+  }
+  .gal-tabs::-webkit-scrollbar{display:none}
+  .gal-tab{
+    font-size:var(--fs-sm);white-space:nowrap;
+    padding:10px 16px 12px;border-bottom:2px solid transparent;
+    flex-shrink:0;border-radius:0;
+  }
+
+  /* TESTI */
+  .testi{padding:var(--sp-4) var(--gut)}
+  .testi-mark{font-size:clamp(3rem,10vw,6rem)}
+  .testi-quote{font-size:var(--fs-md)}
+
+  /* TEAM */
+  .tcard:nth-child(2){margin-top:0}
+
+  /* CTA */
+  .cta-section{min-height:420px}
+  .cta-inner{padding:var(--sp-4) var(--gut)}
+  .cta-inner p{grid-column:1/13}
+  .cta-links{flex-direction:column;align-items:flex-start;gap:12px}
+  .cta-links .text-link{font-size:var(--fs-sm)}
+
+  /* RÉSERVATION */
+  .book-grid{padding:var(--sp-3)}
+  .book-col + .book-col{margin-top:var(--sp-3);padding-top:var(--sp-3);border-top:1px solid var(--line)}
+
+  /* FOOTER */
+  .f-grid{grid-template-columns:1fr 1fr;row-gap:var(--sp-3)}
+}
+
+/* ==========================================================================
+   RESPONSIVE — mobile (≤ 600 px)
+   ========================================================================== */
+@media(max-width:600px){
+  :root{--gut:18px}
+
+  /* NAV */
+  .nav{padding:14px var(--gut)}
+  .nav-cta{display:none} /* priorité au contenu, lien de réserv. dans page */
+
+  /* HERO */
+  .hero{min-height:100svh}
+  .hero-content{margin-bottom:12vh}
+  .hero h1{font-size:clamp(1.9rem,7.5vw,2.8rem);letter-spacing:-.015em}
+  .hero-lede{font-size:.875rem;line-height:1.65}
+  .btn-stroke{max-width:none;font-size:.65rem;padding:13px 18px}
+
+  /* SECTION HEAD */
+  .section-head{margin-bottom:var(--sp-4)}
+  .section-head h2{font-size:clamp(1.6rem,7vw,2.4rem)}
+  .section-head .lede{font-size:var(--fs-sm)}
+
+  /* ABOUT */
+  .about-media{grid-template-columns:1fr;row-gap:var(--sp-2)}
+  .about-media .am-a,.about-media .am-b{
+    grid-column:1/2;
+    aspect-ratio:3/2; /* moins haut sur mobile, évite le défilement excessif */
+  }
+  .about-text h2{font-size:clamp(1.5rem,6.5vw,2.2rem)}
+
+  /* AMBIANCE panels plus courts */
+  .amb-panel{height:56vh;min-height:340px}
+  .amb-text h3{font-size:var(--fs-lg)}
+
+  /* POURQUOI */
+  .why-card{padding:var(--sp-2)}
+
+  /* SERVICES */
+  .svc-row{padding:var(--sp-2) 0;gap:var(--sp-2)}
+  .svc-name{font-size:var(--fs-base)}
+
+  /* GALERIE */
+  .gal-tab{font-size:.75rem;padding:8px 12px 10px}
+  .masonry{column-count:1}
+
+  /* TESTI */
+  .testi{padding:var(--sp-4) var(--gut);display:block}
+  .testi-media{
+    aspect-ratio:3/2;margin-bottom:var(--sp-3);overflow:hidden;
+  }
+  .testi-media img{width:100%;height:100%;object-fit:cover}
+  .testi-body{padding:0}
+
+  /* TEAM */
+  .team-grid{grid-template-columns:1fr}
+  .tcard{grid-column:1/13}
+
+  /* RÉSERVATION */
+  .book-grid{grid-template-columns:1fr;gap:0;padding:var(--sp-2)}
+  .book-submit{font-size:.75rem}
+
+  /* FOOTER */
+  .f-grid{grid-template-columns:1fr}
+  .fbot{flex-direction:column;gap:8px;align-items:flex-start}
+  .fbot p{font-size:.6rem}
+}
+
+/* ==========================================================================
+   RESPONSIVE — très petit (≤ 380 px)
+   ========================================================================== */
+@media(max-width:380px){
+  .hero h1{font-size:1.75rem}
+  .section-head h2{font-size:1.45rem}
 }
