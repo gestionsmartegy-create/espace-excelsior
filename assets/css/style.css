@@ -308,6 +308,35 @@ h1,h2,h3{
 }
 
 /* ==========================================================================
+   POURQUOI NOUS
+   ========================================================================== */
+.why-section{padding:var(--sp-5) var(--gut) var(--sp-6);background:var(--paper-2)}
+.why-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-3);
+}
+.why-card{background:var(--white);border:1px solid var(--line);padding:var(--sp-3)}
+.why-no{
+  font-family:var(--display);font-weight:700;font-size:var(--fs-md);
+  color:var(--brass);margin-bottom:var(--sp-1);
+}
+.why-card h3{font-size:var(--fs-md);margin-bottom:10px}
+.why-card p{font-size:var(--fs-sm);color:var(--ink-soft);line-height:1.75}
+
+@media(max-width:900px){.why-grid{grid-template-columns:1fr}}
+
+/* ==========================================================================
+   AMBIANCE — intro texte (2 colonnes)
+   ========================================================================== */
+.amb-intro{padding-bottom:var(--sp-4)}
+.amb-cols{
+  display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);
+}
+.amb-col{border-top:1px solid var(--line);padding-top:var(--sp-2)}
+.amb-col h3{font-size:var(--fs-md);margin-bottom:10px}
+
+@media(max-width:900px){.amb-cols{grid-template-columns:1fr}}
+
+/* ==========================================================================
    À PROPOS — grille brisée
    ========================================================================== */
 .about{
@@ -609,12 +638,17 @@ h1,h2,h3{
   letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);
   margin-bottom:8px;
 }
-.book-field input{
+.book-field input,.book-field select{
   width:100%;border:1px solid var(--line);background:var(--paper);
   padding:12px 14px;font-family:var(--body);font-size:var(--fs-sm);color:var(--ink);
   transition:border-color .3s var(--ease);
+  appearance:none;-webkit-appearance:none;
 }
-.book-field input:focus{outline:none;border-color:var(--brass)}
+.book-field select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234A463C' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;background-size:14px;
+}
+.book-field input:focus,.book-field select:focus{outline:none;border-color:var(--brass)}
 
 .book-slots{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:var(--sp-2)}
 .book-slot{
@@ -653,6 +687,7 @@ h1,h2,h3{
 }
 .book-submit:hover:not(:disabled){background:var(--brass-deep)}
 .book-submit:disabled{opacity:.5;cursor:not-allowed}
+.book-reassure{margin-top:12px;font-size:var(--fs-xs);color:var(--ink-soft);text-align:center;line-height:1.6}
 .book-status{margin-top:10px;font-size:var(--fs-xs);color:var(--brass-deep)}
 
 @media(max-width:900px){

@@ -19,6 +19,7 @@ create table if not exists bookings (
   customer_email  text not null,
   customer_phone  text,
   guest_count     int,
+  event_type      text, -- mariage, anniversaire, bapteme, gala, corporatif, autre
 
   -- services choisis : [{ id, name, price_cents }]
   services        jsonb not null default '[]',
@@ -26,14 +27,15 @@ create table if not exists bookings (
   deposit_cents   int not null default 0,
 
   -- statut du cycle de vie
-  -- hold      → créneau retenu, en attente de paiement (expire si non payé)
-  -- confirmed → paiement reçu, événement créé dans Google Calendar
-  -- expired   → hold expiré sans paiement, jamais touché le calendrier
+  -- hold      → demande reçue, en attente de validation par l'équipe
+  --             (expire après 48h sans suite, pour garder la liste propre)
+  -- confirmed → acompte reçu, événement créé dans Google Calendar
+  -- expired   → hold expiré sans suite, jamais touché le calendrier
   -- cancelled → annulée après confirmation
   status          text not null default 'hold'
                     check (status in ('hold','confirmed','expired','cancelled')),
 
-  hold_expires_at timestamptz not null default (now() + interval '20 minutes'),
+  hold_expires_at timestamptz not null default (now() + interval '48 hours'),
 
   stripe_session_id text unique,
   stripe_payment_intent text,

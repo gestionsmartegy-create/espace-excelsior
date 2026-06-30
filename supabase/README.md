@@ -3,6 +3,23 @@
 Trois Edge Functions + une table Postgres. Le frontend (`assets/js/booking.js`)
 ne parle jamais directement à Stripe ni à Google Calendar — tout passe par ici.
 
+## Flow en deux phases
+
+**Phase 1 — capture de la demande (déployée ici)**
+Le client choisit une date, un créneau, son type d'événement et les services
+qui l'intéressent. `create-hold` enregistre la demande (statut `hold`) et
+prévient l'équipe — **aucun paiement n'est demandé à cette étape**. Deux
+demandes ne peuvent pas viser le même créneau en même temps (contrainte
+unique en base).
+
+**Phase 2 — validation + acompte (à construire plus tard)**
+Une fois la demande validée manuellement par l'équipe (capacité, budget,
+faisabilité), une fonction `request-deposit` (à créer sur le même modèle que
+`create-hold`) génère le lien de paiement Stripe et l'envoie au client.
+`stripe-webhook` est déjà prêt à recevoir la confirmation de paiement et à
+créer l'événement Google Calendar à ce moment-là — il suffira de le brancher
+à cette nouvelle étape quand la facturation sera prête.
+
 ## 1. Créer le projet Supabase
 
 1. [supabase.com](https://supabase.com) → New Project.
@@ -80,10 +97,10 @@ Les tarifs sont définis à deux endroits qui doivent rester synchronisés :
 ## Pourquoi pas de double-booking ?
 
 - Contrainte unique Postgres sur `(event_date, start_time)` pour les statuts
-  `hold`/`confirmed` → impossible d'insérer deux réservations actives sur le
+  `hold`/`confirmed` → impossible d'insérer deux demandes actives sur le
   même créneau, même en cas de requêtes simultanées.
-- Le hold expire après 20 minutes s'il n'est pas payé ; `expire_stale_holds()`
-  le nettoie sans jamais avoir touché Google Calendar.
-- L'événement Google Calendar n'est créé que par le webhook Stripe, donc
-  uniquement quand l'argent est réellement reçu — jamais de réservation
-  "fantôme" exportée par erreur.
+- Le hold expire après 48h sans suite ; `expire_stale_holds()` le nettoie
+  sans jamais avoir touché Google Calendar.
+- L'événement Google Calendar n'est créé que par le webhook Stripe (phase 2),
+  donc uniquement quand l'acompte est réellement reçu — jamais de
+  réservation "fantôme" exportée par erreur.

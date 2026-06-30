@@ -1,16 +1,21 @@
 // POST /create-hold
-// body: { date, start_time, end_time, name, email, phone, guest_count, service_ids }
+// body: { date, start_time, end_time, name, email, phone, guest_count,
+//         event_type, service_ids }
 //
-// 1. Insère un hold (expire dans 20 min) — la contrainte unique
-//    bookings_active_slot_idx empêche deux holds sur le même créneau.
-// 2. Crée une session Stripe Checkout pour l'acompte.
-// 3. Renvoie l'URL de paiement au frontend.
+// Étape "demande de date" : insère une ligne `inquiry`, sans paiement.
+// L'équipe valide ensuite manuellement et déclenche la demande
+// d'acompte (Stripe) dans un second temps — voir
+// supabase/functions/request-deposit (à construire quand la facturation
+// sera prête, voir supabase/README.md).
 //
-// L'événement Google Calendar n'est PAS créé ici — seulement par
-// le webhook Stripe, une fois le paiement confirmé.
+// La contrainte unique sur (event_date, start_time) empêche deux
+// demandes actives (inquiry/confirmed) sur le même créneau, pour
+// éviter de qualifier deux clients sur la même date sans le savoir.
+//
+// L'événement Google Calendar n'est créé qu'au moment de la
+// confirmation finale (paiement reçu), jamais ici.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import Stripe from "https://esm.sh/stripe@14?target=deno";
 import { computeTotals } from "../_shared/pricing.ts";
 
 const corsHeaders = {
@@ -18,17 +23,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
-  apiVersion: "2023-10-16",
-  httpClient: Stripe.createFetchHttpClient(),
-});
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
     const body = await req.json();
-    const { date, start_time, end_time, name, email, phone, guest_count, service_ids } = body;
+    const { date, start_time, end_time, name, email, phone, guest_count, event_type, service_ids } = body;
 
     if (!date || !start_time || !end_time || !name || !email) {
       return json({ error: "Champs requis manquants" }, 400);
@@ -41,7 +41,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // le constraint unique empêche un double-hold sur le même créneau
     const { data: booking, error: insertError } = await supabase
       .from("bookings")
       .insert({
@@ -52,49 +51,26 @@ Deno.serve(async (req) => {
         customer_email: email,
         customer_phone: phone ?? null,
         guest_count: guest_count ?? null,
+        event_type: event_type ?? null,
         services,
         total_cents,
         deposit_cents,
-        status: "hold",
+        status: "hold", // = demande en attente de validation par l'équipe
       })
       .select()
       .single();
 
     if (insertError) {
       if (insertError.code === "23505") {
-        return json({ error: "Ce créneau vient d'être réservé par quelqu'un d'autre." }, 409);
+        return json({ error: "Cette date et ce créneau sont déjà en cours de traitement pour un autre client." }, 409);
       }
       return json({ error: insertError.message }, 500);
     }
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      payment_method_types: ["card"],
-      customer_email: email,
-      line_items: [
-        {
-          price_data: {
-            currency: "cad",
-            unit_amount: deposit_cents,
-            product_data: {
-              name: `Acompte — réservation Espace Excelsior (${date}, ${start_time})`,
-            },
-          },
-          quantity: 1,
-        },
-      ],
-      metadata: { booking_id: booking.id },
-      success_url: `${Deno.env.get("SITE_URL")}/?reservation=succes`,
-      cancel_url: `${Deno.env.get("SITE_URL")}/?reservation=annulee`,
-      expires_at: Math.floor(Date.now() / 1000) + 20 * 60,
-    });
+    // TODO : notifier l'équipe (e-mail/Slack) qu'une nouvelle demande
+    // est arrivée, avec un lien vers la fiche `booking.id` à valider.
 
-    await supabase
-      .from("bookings")
-      .update({ stripe_session_id: session.id })
-      .eq("id", booking.id);
-
-    return json({ checkout_url: session.url, deposit_cents, total_cents });
+    return json({ ok: true, booking_id: booking.id });
   } catch (e) {
     return json({ error: String(e) }, 500);
   }

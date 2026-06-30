@@ -1,7 +1,8 @@
-// Module de réservation — interroge les Edge Functions Supabase
-// définies dans booking-config.js. Si SUPABASE_FUNCTIONS_URL n'est
-// pas encore configuré, le module reste affiché mais désactivé
-// avec un message clair, plutôt que d'échouer silencieusement.
+// Module de réservation — capture la demande (date, créneau, type
+// d'événement, services souhaités) et la transmet au backend.
+// Le paiement d'acompte n'est PAS demandé à cette étape : l'équipe
+// valide d'abord les détails avec le client, l'acompte (si requis)
+// se règle dans un second temps. Voir supabase/README.md.
 
 (function () {
   const root = document.getElementById("reservation");
@@ -12,15 +13,13 @@
   const dateInput = root.querySelector("#book-date");
   const slotsWrap = root.querySelector("#book-slots");
   const servicesWrap = root.querySelector("#book-services");
-  const totalEl = root.querySelector("#book-total");
-  const depositEl = root.querySelector("#book-deposit");
   const form = root.querySelector("#book-form");
   const submitBtn = root.querySelector("#book-submit");
   const statusEl = root.querySelector("#book-status");
 
   let selectedSlot = null;
 
-  // construit la liste de services à cocher
+  // liste de services à cocher, sans prix affiché à cette étape
   BOOKING_SERVICES.forEach((svc) => {
     const row = document.createElement("label");
     row.className = "book-svc-row";
@@ -30,31 +29,14 @@
         <span></span>
       </span>
       <span class="book-svc-name">${svc.name}${svc.required ? " <em>(inclus)</em>" : ""}</span>
-      <span class="book-svc-price">${formatPrice(svc.price_cents)}</span>
     `;
     servicesWrap.appendChild(row);
   });
-
-  servicesWrap.addEventListener("change", updateTotals);
-  updateTotals();
 
   function getSelectedServiceIds() {
     return BOOKING_SERVICES.filter((svc) => svc.required).map((s) => s.id).concat(
       Array.from(servicesWrap.querySelectorAll("input:checked:not(:disabled)")).map((i) => i.value)
     );
-  }
-
-  function updateTotals() {
-    const ids = new Set(getSelectedServiceIds());
-    const selected = BOOKING_SERVICES.filter((s) => ids.has(s.id));
-    const total = selected.reduce((sum, s) => sum + s.price_cents, 0);
-    const deposit = Math.max(Math.round(total * DEPOSIT_PERCENT), DEPOSIT_MIN_CENTS);
-    totalEl.textContent = formatPrice(total);
-    depositEl.textContent = formatPrice(deposit);
-  }
-
-  function formatPrice(cents) {
-    return (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD", minimumFractionDigits: 0 });
   }
 
   if (!isConfigured) {
@@ -100,7 +82,7 @@
       return;
     }
     submitBtn.disabled = true;
-    submitBtn.textContent = "Redirection vers le paiement…";
+    submitBtn.textContent = "Envoi en cours…";
 
     const formData = new FormData(form);
     try {
@@ -115,21 +97,25 @@
           email: formData.get("email"),
           phone: formData.get("phone"),
           guest_count: formData.get("guests"),
+          event_type: formData.get("event_type"),
           service_ids: getSelectedServiceIds(),
         }),
       });
       const data = await res.json();
-      if (data.checkout_url) {
-        window.location.href = data.checkout_url;
+      if (res.ok) {
+        form.reset();
+        slotsWrap.innerHTML = `<p class="book-note">Choisissez une date pour voir les créneaux libres.</p>`;
+        statusEl.textContent = "Merci ! Votre date est en attente de confirmation — notre équipe vous écrit sous peu.";
+        submitBtn.textContent = "Demande envoyée";
       } else {
-        statusEl.textContent = data.error || "Une erreur est survenue.";
+        statusEl.textContent = data.error || "Une erreur est survenue. Réessayez.";
         submitBtn.disabled = false;
-        submitBtn.textContent = "Payer l'acompte et réserver";
+        submitBtn.textContent = "Vérifier ma date";
       }
     } catch (e) {
       statusEl.textContent = "Une erreur est survenue. Réessayez.";
       submitBtn.disabled = false;
-      submitBtn.textContent = "Payer l'acompte et réserver";
+      submitBtn.textContent = "Vérifier ma date";
     }
   });
 })();
