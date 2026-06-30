@@ -25,7 +25,7 @@
     <li><a href="#galerie">Galerie</a></li>
     <li><a href="#equipe">Équipe</a></li>
   </ul>
-  <a href="#cta" class="nav-cta magnetic">Réserver</a>
+  <a href="#reservation" class="nav-cta magnetic">Réserver</a>
 </header>
 
 <!-- HERO -->
@@ -35,7 +35,7 @@
     <h1><span>On réserve</span><span>la salle. Vous amenez</span><span class="italic">le party.</span></h1>
     <p class="lede hero-lede">Traiteur, DJ, bar, déco — tout est prêt avant que vous arriviez. Jusqu'à 500 invités.</p>
     <div class="hero-links">
-      <a href="#cta" class="text-link magnetic">
+      <a href="#reservation" class="text-link magnetic">
         Vérifier une date
         <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
@@ -94,7 +94,7 @@
         <div><span>Capacité</span><span>Jusqu'à 500 invités</span></div>
         <div><span>Mise en place</span><span>Incluse</span></div>
       </div>
-      <a href="#cta" class="text-link magnetic">
+      <a href="#reservation" class="text-link magnetic">
         Discuter de votre date
         <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
@@ -252,13 +252,70 @@
     <p class="kicker rv">Prochaine étape</p>
     <h2 class="rv">Dites-nous la date. <span class="italic">On s'occupe du party.</span></h2>
     <div class="cta-links rv">
-      <a href="#" class="text-link light magnetic">
+      <a href="#reservation" class="text-link light magnetic">
         Vérifier les disponibilités
         <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
       <a href="#" class="text-link light magnetic">Nous écrire</a>
     </div>
   </div>
+</section>
+
+<!-- RÉSERVATION -->
+<section class="book-section" id="reservation">
+  <div class="section-head">
+    <p class="kicker">Réservation</p>
+    <h2>Votre date, vos services, c'est réglé.</h2>
+    <p class="lede">Un acompte valide la réservation — le solde se règle séparément.</p>
+  </div>
+
+  <form class="book-grid rv" id="book-form">
+    <div class="book-col">
+      <div class="book-field">
+        <label for="book-date">Date de l'événement</label>
+        <input type="date" id="book-date" name="date" required>
+      </div>
+      <div class="book-field">
+        <label>Créneau</label>
+        <div class="book-slots" id="book-slots">
+          <p class="book-note">Choisissez une date pour voir les créneaux libres.</p>
+        </div>
+      </div>
+      <div class="book-field">
+        <label for="book-name">Nom complet</label>
+        <input type="text" id="book-name" name="name" required>
+      </div>
+      <div class="book-field">
+        <label for="book-email">Courriel</label>
+        <input type="email" id="book-email" name="email" required>
+      </div>
+      <div class="book-field">
+        <label for="book-phone">Téléphone</label>
+        <input type="tel" id="book-phone" name="phone">
+      </div>
+      <div class="book-field">
+        <label for="book-guests">Nombre d'invités</label>
+        <input type="number" id="book-guests" name="guests" min="1" max="500">
+      </div>
+    </div>
+
+    <div class="book-col">
+      <div class="book-field">
+        <label>Services</label>
+        <div id="book-services"></div>
+      </div>
+      <div class="book-totals">
+        <span class="label">Total estimé</span>
+        <span class="val" id="book-total">0 $</span>
+      </div>
+      <div class="book-totals deposit">
+        <span class="label">Acompte à payer maintenant</span>
+        <span class="val" id="book-deposit">0 $</span>
+      </div>
+      <button type="submit" class="book-submit" id="book-submit">Payer l'acompte et réserver</button>
+      <p class="book-status" id="book-status"></p>
+    </div>
+  </form>
 </section>
 
 <!-- FOOTER -->
@@ -268,7 +325,7 @@
       <div class="f-brand"><img src="assets/images/LogoEspaceExcelsior-Co-05-2025nb.png" alt="Espace Excelsior"></div>
       <p class="f-tagline">Salle de réception à Laval. Traiteur, DJ, bar, déco — une équipe, un party.</p>
     </div>
-    <div class="f-col"><h4>Navigation</h4><ul><li><a href="#about">La salle</a></li><li><a href="#services">Services</a></li><li><a href="#galerie">Galerie</a></li><li><a href="#cta">Réservation</a></li></ul></div>
+    <div class="f-col"><h4>Navigation</h4><ul><li><a href="#about">La salle</a></li><li><a href="#services">Services</a></li><li><a href="#galerie">Galerie</a></li><li><a href="#reservation">Réservation</a></li></ul></div>
     <div class="f-col"><h4>Services</h4><ul><li>Location de salle</li><li>Traiteur</li><li>DJ · Bar</li><li>Photobooth</li></ul></div>
     <div class="f-col"><h4>Contact</h4><ul><li><strong>Laval, Québec</strong></li><li>Facebook · Instagram</li></ul></div>
   </div>
@@ -281,5 +338,7 @@
 <div class="lightbox"><button class="lightbox-close">Fermer ✕</button><img src="" alt=""></div>
 
 <script src="assets/js/main.js" defer></script>
+<script src="assets/js/booking-config.js" defer></script>
+<script src="assets/js/booking.js" defer></script>
 </body>
 </html>
