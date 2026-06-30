@@ -191,63 +191,81 @@ h1,h2,h3{
 }
 
 /* ==========================================================================
-   HERO — split éditorial
+   HERO — plein écran, voile en fondu
    ========================================================================== */
 .hero{
-  padding:calc(var(--sp-6) + 40px) var(--gut) 0;
-  display:grid;
-  grid-template-columns:repeat(12,1fr);
-  gap:var(--sp-2);
-  background:var(--paper);
-}
-.hero-text{
-  grid-column:1/6;
-  align-self:center;
-  padding-bottom:var(--sp-5);
-}
-.hero-text .kicker{margin-bottom:var(--sp-2)}
-.hero h1{
-  font-size:var(--fs-xxl);
-  margin-bottom:var(--sp-2);
-}
-.hero h1 span{display:block}
-.hero-lede{
-  max-width:38ch;margin-bottom:var(--sp-3);
-}
-.hero-links{display:flex;gap:var(--sp-3);flex-wrap:wrap;align-items:center}
-
-.hero-media{
-  grid-column:6/13;
   position:relative;
-  align-self:end;
+  height:100vh;min-height:680px;
+  display:flex;align-items:center;
+  overflow:hidden;
+  background:var(--ink);
 }
-.hero-media-frame{
-  position:relative;
-  aspect-ratio:4/5;
-  margin-bottom:-1px;
-}
-.hero-media-frame::before{
-  content:'';position:absolute;
-  top:18px;left:18px;right:-18px;bottom:-18px;
-  border:1px solid var(--brass);
-  z-index:0;
-}
-.hero-media-clip{
-  position:relative;z-index:1;
-  width:100%;height:100%;overflow:hidden;
-}
-.hero-media-clip img{
+.hero-bg{position:absolute;inset:0;overflow:hidden}
+.hero-bg img{
   width:100%;height:124%;object-fit:cover;
+  filter:saturate(.92) brightness(.74);
   will-change:transform;
 }
-.hero-tag{
-  position:absolute;z-index:2;left:0;bottom:36px;
-  background:var(--ink);color:var(--paper);
-  padding:14px 26px;
-  font-size:var(--fs-xs);font-weight:500;
-  letter-spacing:.12em;text-transform:uppercase;
+.hero-fade{
+  position:absolute;inset:0;z-index:1;
+  background:
+    linear-gradient(to top, rgba(21,20,15,.92) 0%, rgba(21,20,15,.35) 42%, rgba(21,20,15,.18) 100%),
+    linear-gradient(to bottom, rgba(21,20,15,.55) 0%, transparent 22%);
 }
-.hero-tag b{color:var(--brass);font-weight:700;margin-right:6px}
+.hero-content{
+  position:relative;z-index:2;
+  width:100%;
+  padding:0 var(--gut);
+  padding-top:80px;
+}
+.kicker-light{color:var(--white)}
+.kicker-light::before{background:var(--white)}
+.hero h1{
+  font-size:var(--fs-xxl);
+  color:var(--white);
+  margin:var(--sp-2) 0;
+  max-width:14ch;
+}
+.hero h1 span{display:block}
+.hero h1 .italic{color:var(--white);opacity:.85}
+.hero-lede{
+  max-width:46ch;margin-bottom:var(--sp-3);
+  color:rgba(244,240,230,.78);
+}
+.hero-links{display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+
+/* boutons "stroke" — contour fin, fond transparent, premium */
+.btn-stroke{
+  display:inline-flex;align-items:center;justify-content:center;
+  font-family:var(--body);font-size:var(--fs-xs);font-weight:500;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:var(--white);
+  background:transparent;
+  border:1px solid rgba(244,240,230,.55);
+  padding:16px 32px;
+  text-decoration:none;white-space:nowrap;
+  transition:border-color .4s var(--ease),background .4s var(--ease),color .4s var(--ease);
+}
+.btn-stroke:hover{border-color:var(--white);background:rgba(244,240,230,.08)}
+.btn-stroke-ghost{
+  border-color:transparent;background:transparent;
+  color:rgba(244,240,230,.85);
+}
+.btn-stroke-ghost:hover{border-color:rgba(244,240,230,.55);background:transparent}
+
+.hero-caption{
+  position:absolute;z-index:2;left:0;right:0;bottom:32px;
+  text-align:center;
+  font-size:var(--fs-xs);font-weight:500;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:rgba(244,240,230,.6);
+}
+
+@media(max-width:900px){
+  .hero{height:92vh;min-height:560px}
+  .hero h1{max-width:none}
+  .hero-caption{display:none}
+}
 
 /* marquee — discrète, défilement lent */
 .mq{
@@ -741,11 +759,4 @@ footer{background:var(--ink);color:rgba(244,240,230,.55);padding:var(--sp-5) var
 @media(max-width:900px){
   :root{--gut:24px}
   .nav-links{display:none}
-  .hero{grid-template-columns:1fr;padding-top:calc(var(--sp-5) + 20px)}
-  .hero-text{grid-column:1/13;padding-bottom:var(--sp-3)}
-  .hero-media{grid-column:1/13}
-  .stats{grid-template-columns:1fr 1fr}
-  .stat{border-right:1px solid var(--line)}
-  .stat:nth-child(2n){border-right:none}
-  .stat:nth-child(n+3){border-top:1px solid var(--line)}
 }

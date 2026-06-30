@@ -31,17 +31,17 @@ onScroll();
 
 /* parallax léger — hero + panneaux ambiance, via rAF */
 const parallaxEls = [
-  ...document.querySelectorAll('.hero-media-clip img'),
+  ...document.querySelectorAll('.hero-bg img'),
   ...document.querySelectorAll('.amb-clip img')
 ];
 let ticking = false;
 function updateParallax() {
   const vh = window.innerHeight;
   parallaxEls.forEach(img => {
-    const rect = img.closest('.hero-media-clip, .amb-clip').getBoundingClientRect();
+    const rect = img.closest('.hero-bg, .amb-clip').getBoundingClientRect();
     if (rect.bottom < 0 || rect.top > vh) return;
     const progressY = (rect.top) / vh;
-    const shift = progressY * 36;
+    const shift = progressY * 26;
     img.style.transform = `translateY(${shift}px)`;
   });
   ticking = false;
