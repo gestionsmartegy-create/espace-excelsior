@@ -134,6 +134,7 @@ h1,h2,h3{
 }
 .text-link svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.6;transition:transform .4s var(--ease)}
 .text-link:hover{color:var(--brass);border-color:var(--brass);gap:14px}
+.magnetic{display:inline-flex;transition:transform .25s var(--ease)}
 .text-link.light{color:var(--paper);border-color:rgba(244,240,230,.4)}
 .text-link.light:hover{color:var(--paper);border-color:var(--paper)}
 
@@ -235,9 +236,13 @@ h1,h2,h3{
   border:1px solid var(--brass);
   z-index:0;
 }
-.hero-media-frame img{
+.hero-media-clip{
   position:relative;z-index:1;
-  width:100%;height:100%;object-fit:cover;
+  width:100%;height:100%;overflow:hidden;
+}
+.hero-media-clip img{
+  width:100%;height:124%;object-fit:cover;
+  will-change:transform;
 }
 .hero-tag{
   position:absolute;z-index:2;left:0;bottom:36px;
@@ -325,7 +330,9 @@ h1,h2,h3{
 .about-media .am-b{
   grid-column:2/3;aspect-ratio:3/4;
 }
-.about-media img{width:100%;height:100%;object-fit:cover;filter:saturate(.95)}
+.about-media .am-a,.about-media .am-b{overflow:hidden}
+.about-media img{width:100%;height:100%;object-fit:cover;filter:saturate(.95);transition:transform .9s var(--ease)}
+.about-media .am-a:hover img,.about-media .am-b:hover img{transform:scale(1.05)}
 .about-text{
   grid-column:8/13;
   padding-top:var(--sp-3);
@@ -345,6 +352,65 @@ h1,h2,h3{
 @media(max-width:900px){
   .about-media,.about-text{grid-column:1/13}
   .about-text{padding-top:var(--sp-3)}
+}
+
+/* ==========================================================================
+   AMBIANCE — panneaux plein écran, parallax + wipe
+   ========================================================================== */
+.ambiance{background:var(--ink)}
+.amb-panel{
+  position:relative;
+  height:88vh;min-height:520px;
+  overflow:hidden;
+  display:flex;align-items:flex-end;
+}
+.amb-clip{
+  position:absolute;inset:0;
+  clip-path:inset(0 0 100% 0);
+  transition:clip-path 1.3s var(--ease);
+}
+.amb-panel.on .amb-clip{clip-path:inset(0 0 0% 0)}
+.amb-clip img{
+  position:absolute;top:-8%;left:0;
+  width:100%;height:116%;object-fit:cover;
+  will-change:transform;
+  filter:saturate(.92) brightness(.78);
+}
+.amb-panel::after{
+  content:'';position:absolute;inset:0;z-index:1;
+  background:linear-gradient(to top,rgba(21,20,15,.85) 0%,rgba(21,20,15,.1) 55%);
+}
+.amb-text{
+  position:relative;z-index:2;color:var(--white);
+  padding:var(--sp-4) var(--gut);
+  max-width:560px;
+}
+.amb-no{
+  font-family:var(--display);font-weight:700;font-size:var(--fs-sm);
+  color:var(--brass);margin-bottom:var(--sp-1);
+  opacity:0;transform:translateY(14px);
+  transition:opacity .8s var(--ease) .3s,transform .8s var(--ease) .3s;
+}
+.amb-panel.on .amb-no{opacity:1;transform:translateY(0)}
+.amb-text h3{
+  font-size:var(--fs-xl);color:var(--white);margin-bottom:var(--sp-1);
+  opacity:0;transform:translateY(20px);
+  transition:opacity .8s var(--ease) .4s,transform .8s var(--ease) .4s;
+}
+.amb-panel.on .amb-text h3{opacity:1;transform:translateY(0)}
+.amb-text p{
+  font-size:var(--fs-base);color:rgba(244,240,230,.7);line-height:1.7;max-width:42ch;
+  opacity:0;transform:translateY(20px);
+  transition:opacity .8s var(--ease) .5s,transform .8s var(--ease) .5s;
+}
+.amb-panel.on .amb-text p{opacity:1;transform:translateY(0)}
+.amb-panel:nth-child(2) .amb-text{margin-left:auto;text-align:right}
+.amb-panel:nth-child(2) .amb-text p{margin-left:auto}
+
+@media(max-width:900px){
+  .amb-panel{height:72vh}
+  .amb-panel:nth-child(2) .amb-text{margin-left:0;text-align:left}
+  .amb-panel:nth-child(2) .amb-text p{margin-left:0}
 }
 
 /* ==========================================================================
