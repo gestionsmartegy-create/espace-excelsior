@@ -17,11 +17,12 @@ const ambObs = new IntersectionObserver(entries => {
 }, { threshold: .3 });
 document.querySelectorAll('.amb-panel').forEach(el => ambObs.observe(el));
 
-/* nav — fond au scroll + barre de progression */
+/* nav — transparent sur hero, solide dès qu'on quitte */
 const nav = document.querySelector('.nav');
 const progress = document.querySelector('.scroll-progress');
+const heroHeight = () => document.querySelector('.hero')?.offsetHeight ?? window.innerHeight;
 const onScroll = () => {
-  nav.classList.toggle('scrolled', window.scrollY > 40);
+  nav.classList.toggle('scrolled', window.scrollY > heroHeight() * 0.6);
   const h = document.documentElement;
   const pct = h.scrollTop / (h.scrollHeight - h.clientHeight) * 100;
   progress.style.width = pct + '%';
