@@ -1,14 +1,25 @@
-// Module de réservation — capture la demande (date, créneau, type
-// d'événement, services souhaités) et la transmet au backend.
-// Le paiement d'acompte n'est PAS demandé à cette étape : l'équipe
-// valide d'abord les détails avec le client, l'acompte (si requis)
-// se règle dans un second temps. Voir supabase/README.md.
+// Module de réservation — envoie la demande par courriel via FormSubmit
+// (https://formsubmit.co), sans paiement ni backend. L'équipe reçoit
+// toutes les infos et confirme la disponibilité par retour de courriel.
+//
+// Première soumission : FormSubmit envoie un courriel d'activation à
+// BOOKING_EMAIL — cliquer le lien une seule fois, ensuite tout arrive
+// directement dans la boîte.
+//
+// Le backend Supabase (dossier supabase/) reste prêt pour plus tard :
+// disponibilités en direct + acompte Stripe.
+
+const BOOKING_EMAIL = "info@espaceexcelsior.com";
+
+const BOOKING_SLOTS = [
+  { start: "11:00", end: "16:00", label: "Jour — 11h à 16h" },
+  { start: "18:00", end: "23:00", label: "Soir — 18h à 23h" },
+  { start: "11:00", end: "23:00", label: "Journée complète" },
+];
 
 (function () {
   const root = document.getElementById("reservation");
   if (!root) return;
-
-  const isConfigured = !SUPABASE_FUNCTIONS_URL.includes("YOUR-PROJECT-REF");
 
   const dateInput = root.querySelector("#book-date");
   const slotsWrap = root.querySelector("#book-slots");
@@ -19,13 +30,32 @@
 
   let selectedSlot = null;
 
-  // liste de services à cocher, sans prix affiché à cette étape
+  // date minimale : demain
+  const tomorrow = new Date(Date.now() + 86400000);
+  dateInput.min = tomorrow.toISOString().slice(0, 10);
+
+  // créneaux fixes — la disponibilité est confirmée par l'équipe
+  slotsWrap.innerHTML = "";
+  BOOKING_SLOTS.forEach((slot) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "book-slot";
+    btn.textContent = slot.label;
+    btn.addEventListener("click", () => {
+      slotsWrap.querySelectorAll(".book-slot").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedSlot = slot;
+    });
+    slotsWrap.appendChild(btn);
+  });
+
+  // liste de services à cocher
   BOOKING_SERVICES.forEach((svc) => {
     const row = document.createElement("label");
     row.className = "book-svc-row";
     row.innerHTML = `
       <span class="book-svc-check">
-        <input type="checkbox" value="${svc.id}" ${svc.required ? "checked disabled" : ""}>
+        <input type="checkbox" value="${svc.id}" data-name="${svc.name}" ${svc.required ? "checked disabled" : ""}>
         <span></span>
       </span>
       <span class="book-svc-name">${svc.name}${svc.required ? " <em>(inclus)</em>" : ""}</span>
@@ -33,87 +63,63 @@
     servicesWrap.appendChild(row);
   });
 
-  function getSelectedServiceIds() {
-    return BOOKING_SERVICES.filter((svc) => svc.required).map((s) => s.id).concat(
-      Array.from(servicesWrap.querySelectorAll("input:checked:not(:disabled)")).map((i) => i.value)
-    );
+  function getSelectedServiceNames() {
+    const names = BOOKING_SERVICES.filter((s) => s.required).map((s) => s.name);
+    servicesWrap.querySelectorAll("input:checked:not(:disabled)").forEach((i) => {
+      names.push(i.dataset.name);
+    });
+    return [...new Set(names)];
   }
-
-  if (!isConfigured) {
-    slotsWrap.innerHTML = `<p class="book-note">Le calendrier en ligne arrive bientôt. En attendant, écrivez-nous pour vérifier une date.</p>`;
-    dateInput.disabled = true;
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Bientôt disponible";
-    return;
-  }
-
-  dateInput.addEventListener("change", async () => {
-    selectedSlot = null;
-    slotsWrap.innerHTML = `<p class="book-note">Recherche des créneaux…</p>`;
-    try {
-      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/check-availability?date=${dateInput.value}`);
-      const data = await res.json();
-      if (!data.slots || data.slots.length === 0) {
-        slotsWrap.innerHTML = `<p class="book-note">Aucun créneau libre à cette date.</p>`;
-        return;
-      }
-      slotsWrap.innerHTML = "";
-      data.slots.forEach((slot) => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "book-slot";
-        btn.textContent = slot.label;
-        btn.addEventListener("click", () => {
-          slotsWrap.querySelectorAll(".book-slot").forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-          selectedSlot = slot;
-        });
-        slotsWrap.appendChild(btn);
-      });
-    } catch (e) {
-      slotsWrap.innerHTML = `<p class="book-note">Erreur de chargement. Réessayez.</p>`;
-    }
-  });
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (!dateInput.value || !selectedSlot) {
-      statusEl.textContent = "Choisissez une date et un créneau.";
+    statusEl.textContent = "";
+    if (!dateInput.value) {
+      statusEl.textContent = "Choisissez une date.";
+      return;
+    }
+    if (!selectedSlot) {
+      statusEl.textContent = "Choisissez un créneau.";
       return;
     }
     submitBtn.disabled = true;
     submitBtn.textContent = "Envoi en cours…";
 
     const formData = new FormData(form);
+    const payload = {
+      _subject: `Demande de réservation — ${dateInput.value} (${formData.get("event_type") || "événement"})`,
+      _template: "table",
+      _captcha: "false",
+      "Date de l'événement": dateInput.value,
+      "Créneau": selectedSlot.label,
+      "Nom": formData.get("name"),
+      "Courriel": formData.get("email"),
+      "Téléphone": formData.get("phone") || "—",
+      "Nombre d'invités": formData.get("guests") || "—",
+      "Type d'événement": formData.get("event_type") || "—",
+      "Services souhaités": getSelectedServiceNames().join(", "),
+    };
+
     try {
-      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/create-hold`, {
+      const res = await fetch(`https://formsubmit.co/ajax/${BOOKING_EMAIL}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          date: dateInput.value,
-          start_time: selectedSlot.start,
-          end_time: selectedSlot.end,
-          name: formData.get("name"),
-          email: formData.get("email"),
-          phone: formData.get("phone"),
-          guest_count: formData.get("guests"),
-          event_type: formData.get("event_type"),
-          service_ids: getSelectedServiceIds(),
-        }),
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (res.ok) {
+      if (res.ok && (data.success === "true" || data.success === true)) {
         form.reset();
-        slotsWrap.innerHTML = `<p class="book-note">Choisissez une date pour voir les créneaux libres.</p>`;
-        statusEl.textContent = "Merci ! Votre date est en attente de confirmation — notre équipe vous écrit sous peu.";
-        submitBtn.textContent = "Demande envoyée";
+        selectedSlot = null;
+        slotsWrap.querySelectorAll(".book-slot").forEach((b) => b.classList.remove("active"));
+        statusEl.textContent = "Merci ! Votre demande est envoyée — notre équipe vous confirme la disponibilité sous peu.";
+        submitBtn.textContent = "Demande envoyée ✓";
       } else {
-        statusEl.textContent = data.error || "Une erreur est survenue. Réessayez.";
+        statusEl.textContent = data.message || "Une erreur est survenue. Réessayez ou écrivez-nous directement.";
         submitBtn.disabled = false;
         submitBtn.textContent = "Vérifier ma date";
       }
-    } catch (e) {
-      statusEl.textContent = "Une erreur est survenue. Réessayez.";
+    } catch (err) {
+      statusEl.textContent = "Une erreur est survenue. Réessayez ou écrivez-nous directement.";
       submitBtn.disabled = false;
       submitBtn.textContent = "Vérifier ma date";
     }
